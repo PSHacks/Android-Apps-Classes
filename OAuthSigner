@@ -1,0 +1,122 @@
+package ru.mail.instantmessanger.mrim;
+
+import android.os.SystemClock;
+import java.io.IOException;
+import java.util.*;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.message.BasicNameValuePair;
+import ru.mail.instantmessanger.at;
+import ru.mail.instantmessanger.aw;
+import ru.mail.instantmessanger.dao.e;
+
+// Referenced classes of package ru.mail.instantmessanger.mrim:
+//            g
+
+public final class OAuthSigner
+{
+
+    public OAuthSigner()
+    {
+        afY = new WeakHashMap();
+    }
+
+    private static TokensHolder a(g g1, TokensHolder tokensholder)
+    {
+        ArrayList arraylist = new ArrayList();
+        arraylist.add(new BasicNameValuePair("grant_type", "refresh_token"));
+        arraylist.add(new BasicNameValuePair("refresh_token", tokensholder.refresh_token));
+        at.iM();
+        aw aw1 = at.a("https://o2.mail.ru/token", Collections.emptyList(), new UrlEncodedFormEntity(arraylist), Collections.emptyList());
+        try
+        {
+            TokensHolder tokensholder1 = (TokensHolder)e.a(ru/mail/instantmessanger/mrim/OAuthSigner$TokensHolder, aw1.Fi);
+            if(tokensholder1.access_token == null)
+                return o(g1);
+            tokensholder.mExpirationTime = (SystemClock.elapsedRealtime() + 1000L * tokensholder1.expires_in) - 600L;
+            tokensholder.access_token = tokensholder1.access_token;
+        }
+        catch(RuntimeException runtimeexception)
+        {
+            throw new IOException(runtimeexception);
+        }
+        return tokensholder;
+    }
+
+    private static TokensHolder o(g g1)
+    {
+        ArrayList arraylist = new ArrayList();
+        arraylist.add(new BasicNameValuePair("grant_type", "password"));
+        arraylist.add(new BasicNameValuePair("client_secret", "gzw2UlJc3WSRHV4u"));
+        arraylist.add(new BasicNameValuePair("client_id", "android-agent"));
+        arraylist.add(new BasicNameValuePair("username", g1.getProfileId()));
+        arraylist.add(new BasicNameValuePair("password", g1.getPassword()));
+        at.iM();
+        aw aw1 = at.a("https://o2.mail.ru/token", Collections.emptyList(), new UrlEncodedFormEntity(arraylist), Collections.emptyList());
+        TokensHolder tokensholder;
+        try
+        {
+            tokensholder = (TokensHolder)e.a(ru/mail/instantmessanger/mrim/OAuthSigner$TokensHolder, aw1.Fi);
+            tokensholder.mExpirationTime = (SystemClock.elapsedRealtime() + 1000L * tokensholder.expires_in) - 600L;
+        }
+        catch(RuntimeException runtimeexception)
+        {
+            throw new IOException(runtimeexception);
+        }
+        return tokensholder;
+    }
+
+    public final String m(g g1)
+    {
+        this;
+        JVM INSTR monitorenter ;
+        TokensHolder tokensholder = (TokensHolder)afY.get(g1);
+        if(tokensholder != null) goto _L2; else goto _L1
+_L1:
+        tokensholder = o(g1);
+        afY.put(g1, tokensholder);
+_L4:
+        String s = tokensholder.access_token;
+        this;
+        JVM INSTR monitorexit ;
+        return s;
+_L2:
+        if(tokensholder.mExpirationTime >= SystemClock.elapsedRealtime()) goto _L4; else goto _L3
+_L3:
+        tokensholder = a(g1, tokensholder);
+        afY.put(g1, tokensholder);
+          goto _L4
+        Exception exception;
+        exception;
+        throw exception;
+    }
+
+    public final void n(g g1)
+    {
+        this;
+        JVM INSTR monitorenter ;
+        afY.remove(g1);
+        this;
+        JVM INSTR monitorexit ;
+        return;
+        Exception exception;
+        exception;
+        throw exception;
+    }
+
+    private Map afY;
+
+    private class TokensHolder
+        implements Gsonable
+    {
+
+        String access_token;
+        long expires_in;
+        volatile long mExpirationTime;
+        String refresh_token;
+
+        private TokensHolder()
+        {
+        }
+    }
+
+}
